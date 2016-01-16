@@ -76,3 +76,6 @@ module Metamorpher
     end
   end
 end
+
+# ruby = Metamorpher::Drivers::Ruby.new
+# ast = ruby.parse('2 + 2')
