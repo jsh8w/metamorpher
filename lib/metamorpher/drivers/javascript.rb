@@ -28,25 +28,67 @@ module Metamorpher
       end
 
       def create_literal_for(ast)
-        if ast.respond_to? :type
-          Terms::Literal.new(name: ast.type, children: ast.children.map { |c| import(c) })
-        else
-          Terms::Literal.new(name: ast)
+        # Get child nodes for node in question
+        children = get_child_nodes(ast)
+
+        # puts 'parent:'
+        # puts ast
+        # puts 'children:'
+        # puts children
+        # puts '-------'
+
+        # if there are no children (i.e we're at a leaf node)
+        if children.empty?
+          Terms::Literal.new(name: ast.class)
+        else # we're at a non-terminal node
+          Terms::Literal.new(name: ast.class, children: get_child_nodes(ast).map { |c| import(c) })
         end
       end
 
-      def export(literal)
-        if literal.branch?
-          RKelly::Node.new(literal.name, literal.children.map { |c| export(c) })
+      # RKelly returns AST
+      # But it doesn't have a method to retrieve children of a node
+      # This method returns array of child nodes
+      def get_child_nodes(ast)
+        # Array to contain nodes 'below' node in question
+        all_nodes = Array.new
 
-        elsif keyword?(literal)
-          # RKelly requires leaf nodes containing keywords to be represented as nodes.
-          RKelly::Node.new(literal.name)
+        # Array to contain child nodes
+        child_nodes = Array.new
 
-        else
-          # RKelly requires all other leaf nodes to be represented as primitives.
-          literal.name
+        # Inspect each node 'below' node in question, add to array
+        ast.each do |node|
+          all_nodes.push(node)
         end
+
+        # if there is at least 1 node 'below' node in question
+        if all_nodes.length > 1
+          # Get first grandchild node
+          grandchild_node = Array.new
+          all_nodes[1].each_with_index do |node, index|
+            if index == 1
+              grandchild_node.push(node)
+            end
+          end
+
+          # Loop through all nodes below original node
+          all_nodes[1..all_nodes.length].each do |node|
+            # if we've reached grandchild level of tree, break
+            # else we've found a child, so add to array
+            if node == grandchild_node[0]
+              break
+            else
+              child_nodes.push(node)
+            end
+          end
+        end
+
+        child_nodes
+      end
+
+      def export(literal)
+        puts literal.name
+        RKelly::Nodes::Node.new(literal.name)
+        literal.children.map { |c| export(c) }
       end
 
       def keyword?(literal)
@@ -74,7 +116,7 @@ module Metamorpher
 end
 
 # javascript = Metamorpher::Drivers::JavaScript.new
-# ast = javascript.parse('var x = 2 + 2;')
+# ast = javascript.parse('2 + 2')
 # puts ast
 # code = javascript.unparse(ast)
 # puts code

@@ -1,4 +1,5 @@
-require "metamorpher/drivers/javascript"
+require_relative "../../../lib/metamorpher/drivers/javascript"
+#require "metamorpher/drivers/javascript"
 require "metamorpher/builders/ast/builder"
 
 module Metamorpher
