@@ -13,12 +13,13 @@ module Metamorpher
 
       def unparse(literal)
         ast = export(literal)
-        ast.to_ecma()
+        puts ast
+        #ast.to_ecma
       end
 
       def source_location_for(literal)
         ast = ast_for(literal)
-        (ast.loc.expression.begin_pos..(ast.loc.expression.end_pos - 1))
+        (ast.range.from.index..ast.range.to.index)
       end
 
       private
@@ -30,12 +31,6 @@ module Metamorpher
       def create_literal_for(ast)
         # Get child nodes for node in question
         children = get_child_nodes(ast)
-
-        # puts 'parent:'
-        # puts ast
-        # puts 'children:'
-        # puts children
-        # puts '-------'
 
         # if there are no children (i.e we're at a leaf node)
         if children.empty?
@@ -86,9 +81,21 @@ module Metamorpher
       end
 
       def export(literal)
-        puts literal.name
-        RKelly::Nodes::Node.new(literal.name)
-        literal.children.map { |c| export(c) }
+        if literal.branch?
+          RKelly::Nodes::Node.new(literal.name)
+
+        elsif keyword?(literal)
+          # Unparser requires leaf nodes containing keywords to be represented as nodes.
+          RKelly::Nodes::Node.new(literal.name)
+
+        else
+          # Unparser requires all other leaf nodes to be represented as primitives.
+          RKelly::Nodes::Node.new(literal.name)
+        end
+
+        literal.children.each do |child|
+          export(child)
+        end
       end
 
       def keyword?(literal)
@@ -115,8 +122,8 @@ module Metamorpher
   end
 end
 
-# javascript = Metamorpher::Drivers::JavaScript.new
-# ast = javascript.parse('2 + 2')
-# puts ast
-# code = javascript.unparse(ast)
-# puts code
+javascript = Metamorpher::Drivers::JavaScript.new
+ast = javascript.parse('2 + 2;')
+#puts ast
+code = javascript.unparse(ast)
+puts code
