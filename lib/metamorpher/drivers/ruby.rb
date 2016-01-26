@@ -42,7 +42,6 @@ module Metamorpher
         elsif keyword?(literal)
           # Unparser requires leaf nodes containing keywords to be represented as nodes.
           Parser::AST::Node.new(literal.name)
-
         else
           # Unparser requires all other leaf nodes to be represented as primitives.
           literal.name
@@ -79,7 +78,6 @@ end
 
 ruby = Metamorpher::Drivers::Ruby.new
 ast = ruby.parse('2 + 2')
-puts ast
-
-# code = ruby.unparse(ast)
-# puts code
+#puts ast
+code = ruby.unparse(ast)
+puts code

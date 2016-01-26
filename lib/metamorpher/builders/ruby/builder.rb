@@ -25,7 +25,6 @@ module Metamorpher
 
         def parse(source)
           term = driver.parse(source)
-          #puts term.inspect
         end
 
         def rewriters

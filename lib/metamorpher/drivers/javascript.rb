@@ -13,8 +13,7 @@ module Metamorpher
 
       def unparse(literal)
         ast = export(literal)
-        puts ast
-        #ast.to_ecma
+        ast.to_ecma
       end
 
       def source_location_for(literal)
@@ -36,7 +35,7 @@ module Metamorpher
         if children.empty?
           Terms::Literal.new(name: ast.class)
         else # we're at a non-terminal node
-          Terms::Literal.new(name: ast.class, children: get_child_nodes(ast).map { |c| import(c) })
+          Terms::Literal.new(name: ast.class, children: children.map { |c| import(c) })
         end
       end
 
@@ -81,20 +80,23 @@ module Metamorpher
       end
 
       def export(literal)
-        if literal.branch?
-          RKelly::Nodes::Node.new(literal.name)
+        # Get name of RKelly node stored in literal e.g SourceElementsNode
+        node_name = literal.name.to_s.split('RKelly::Nodes::', 2)[1]
 
-        elsif keyword?(literal)
-          # Unparser requires leaf nodes containing keywords to be represented as nodes.
-          RKelly::Nodes::Node.new(literal.name)
+        # Full RKelly node name e.g RKelly::Nodes::SourceElementsNode
+        rkelly_node_name = "RKelly::Nodes::#{node_name}"
 
+        if literal.children.length > 1
+          # if node has > 1 children
+          if literal.children.length == 2
+            node = eval(rkelly_node_name).new(export(literal.children.first), export(literal.children.last))
+          end
+        elsif literal.leaf?
+          # if node is a leaf node (no children)
+          node = eval(rkelly_node_name).new(literal.name)
         else
-          # Unparser requires all other leaf nodes to be represented as primitives.
-          RKelly::Nodes::Node.new(literal.name)
-        end
-
-        literal.children.each do |child|
-          export(child)
+          # if node has a single child. e,g SourceElementsNode etc
+          node = eval(rkelly_node_name).new(export(literal.children.first))
         end
       end
 
