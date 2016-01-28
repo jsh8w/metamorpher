@@ -46,10 +46,10 @@ module Metamorpher
       # This method returns array of child nodes
       def get_child_nodes(ast)
         # Array to contain nodes 'below' node in question
-        all_nodes = Array.new
+        all_nodes = []
 
         # Array to contain child nodes
-        child_nodes = Array.new
+        child_nodes = []
 
         # Inspect each node 'below' node in question, add to array
         ast.each do |node|
@@ -59,11 +59,9 @@ module Metamorpher
         # if there is at least 1 node 'below' node in question
         if all_nodes.length > 1
           # Get first grandchild node
-          grandchild_node = Array.new
+          grandchild_node = []
           all_nodes[1].each_with_index do |node, index|
-            if index == 1
-              grandchild_node.push(node)
-            end
+            grandchild_node.push(node) if index == 1
           end
 
           # Loop through all nodes below original node
@@ -134,7 +132,7 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('2 + 2;')
-#puts ast
+ast = javascript.parse('2 + 2')
+# puts ast
 code = javascript.unparse(ast)
-#puts code
+# puts code
