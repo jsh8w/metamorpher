@@ -13,7 +13,7 @@ module Metamorpher
 
       def unparse(literal)
         ast = export(literal)
-        ast.value.to_ecma
+        ast.to_ecma
       end
 
       def source_location_for(literal)
@@ -28,16 +28,28 @@ module Metamorpher
       end
 
       def create_literal_for(ast)
-        # Get child nodes for node in question
-        children = get_child_nodes(ast)
+        # if ast is an RKelly node. i.e not an attribute of a node
+        if ast.is_a?(RKelly::Nodes::Node)
+          # Get child nodes for node in question
+          children = get_child_nodes(ast)
 
-        # if there are no children (i.e we're at a leaf node)
-        if children.empty?
-          # Add primitive node after this leaf RKelly node
-          # e.g if AST leaf node is NumberNode, add '2' as a node as child
-          Terms::Literal.new(name: ast.class, children: [Terms::Literal.new(name: ast.value)])
-        else # we're at a non-terminal node
-          Terms::Literal.new(name: ast.class, children: children.map { |c| import(c) })
+          # Check if this node has any 'attributes'
+          # Returned as e.g [[attribute_name, attribute_value]]
+          attributes = get_node_attribute_names(ast)
+          children = children + attributes
+
+          # if there are no children (i.e we're at a leaf node)
+          if children.empty?
+            # Add primitive node after this leaf RKelly node
+            # e.g if AST leaf node is NumberNode, add '2' as a node as child
+            Terms::Literal.new(name: ast.class, children: [Terms::Literal.new(name: ast.value)])
+          else # we're at a non-terminal node
+            Terms::Literal.new(name: ast.class, children: children.map { |c| import(c) })
+          end
+        else
+          # Create Metamorpher literal with attribute name -> attribute value
+          # e.g where ast = VarDeclNode, name -> x, and constant = false
+          Terms::Literal.new(name: ast[0], children: [Terms::Literal.new(name: ast[1])])
         end
       end
 
@@ -79,6 +91,35 @@ module Metamorpher
         child_nodes
       end
 
+      def get_node_attribute_names(ast)
+        # Attributes array to return
+        attributes = []
+
+        # if node is a BinaryNode, it has a 'left' and 'right'
+        # These are both children so exception to the standard of 'value'
+        # Being the only child
+        if ast.is_a?(RKelly::Nodes::BinaryNode)
+          attributes
+        else
+          # Get the nodes constructor parameters
+          # This is an array of arrays e.g [[req, name], [req, value]]
+          node_parameters = ast.class.instance_method(:initialize).parameters
+
+          # Loop through parameters
+          node_parameters.each do |parameter|
+            # Get the parameter name
+            attribute_name = parameter[1].to_s
+            # if the parameter is not 'value', i.e not the nodes child
+            if attribute_name != 'value'
+              # Get the parameter value
+              attribute_value = ast.instance_variable_get("@#{attribute_name}")
+              attributes.push([attribute_name, attribute_value])
+            end
+          end
+          attributes
+        end
+      end
+
       def export(literal)
         # if node is not a primitive
         if literal.name.to_s.include? "RKelly::Nodes::"
@@ -90,15 +131,31 @@ module Metamorpher
 
           # if node has > 1 children
           if literal.children.length > 1
-            if literal.children.length == 2
+            # attributes = []
+            # if literal.name.to_s.include? "RKelly::Nodes::"
+            # else
+            #   # Loop through each attribute name of this node
+            #   literal.children.each do |attribute|
+            #     attributes.push([attribute.name.to_s, attribute.children[0].name.to_s])
+            #   end
+            # end
+            #
+            # puts attributes
+
+            if rkelly_node_name == "RKelly::Nodes::VarDeclNode"
+              node = eval(rkelly_node_name).new(literal.children[1].children[0].name.to_s, export(literal.children.first), literal.children[2].children[0].name.to_s)
+            elsif rkelly_node_name == "RKelly::Nodes::AddNode"
               node = eval(rkelly_node_name).new(export(literal.children.first), export(literal.children.last))
             end
           else
             # Node has a single child. e,g SourceElementsNode etc
-
             # if child node is not a leaf node
             if literal.children.first.name.to_s.include? "RKelly::Nodes::"
-              node = eval(rkelly_node_name).new(export(literal.children.first))
+              if rkelly_node_name == "RKelly::Nodes::VarStatementNode" || rkelly_node_name == "RKelly::Nodes::SourceElementsNode"
+                node = eval(rkelly_node_name).new([export(literal.children.first)])
+              else
+                node = eval(rkelly_node_name).new(export(literal.children.first))
+              end
             else
               # child node is a primitive. e.g '2'
               node = eval(rkelly_node_name).new(literal.children.first.name)
@@ -132,7 +189,7 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('2 + 2')
+ast = javascript.parse('var x = 2 + 2;')
 # puts ast
 code = javascript.unparse(ast)
-# puts code
+puts code
