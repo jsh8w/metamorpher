@@ -151,7 +151,10 @@ module Metamorpher
             # Node has a single child. e,g SourceElementsNode etc
             # if child node is not a leaf node
             if literal.children.first.name.to_s.include? "RKelly::Nodes::"
-              if rkelly_node_name == "RKelly::Nodes::VarStatementNode" || rkelly_node_name == "RKelly::Nodes::SourceElementsNode"
+              # Nodes that require array as argument
+              array_nodes = ["Arguments", "Array", "CaseBlock", "ConstStatement", "ObjectLiteral", "SourceElements", "VarStatement"]
+              # if node requires array as argument
+              if array_nodes.any? { |node| rkelly_node_name.include?(node) }
                 node = eval(rkelly_node_name).new([export(literal.children.first)])
               else
                 node = eval(rkelly_node_name).new(export(literal.children.first))
