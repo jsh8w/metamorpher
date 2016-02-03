@@ -131,16 +131,48 @@ module Metamorpher
 
           # if node has > 1 children
           if literal.children.length > 1
-            # attributes = []
-            # if literal.name.to_s.include? "RKelly::Nodes::"
-            # else
-            #   # Loop through each attribute name of this node
-            #   literal.children.each do |attribute|
-            #     attributes.push([attribute.name.to_s, attribute.children[0].name.to_s])
-            #   end
-            # end
-            #
-            # puts attributes
+            # Get constructor paramters of the node we're creating
+            node_object = Object::const_get(rkelly_node_name)
+            node_parameters = node_object.instance_method(:initialize).parameters
+            parameters = []
+
+            node_parameters.each do |parameter|
+              attribute_name = parameter[1].to_s
+              parameters.push(attribute_name)
+            end
+            ##----------------
+
+            # Create array of arguments in same order as parameters
+            # Match a nodes attributes onto parameters
+            arguments = []
+            child_nodes = []
+            literal.children.each do |node|
+              match = false
+              parameters.each_with_index do |parameter, index|
+                if parameter == node.name.to_s
+                  arguments[index] = node.children[0].name.to_s
+                  match = true
+                end
+              end
+              if match == false
+                child_nodes.push(node)
+              end
+            end
+
+            # Add actual RKelly child nodes at first free element in array
+            child_nodes.each do |node|
+              arguments.each_with_index do |argument, index|
+                if argument.nil?
+                  arguments[index] = child_nodes.shift
+                end
+              end
+            end
+
+            # If nodes have not yet been matched, add onto the end of array
+            child_nodes.each do |node|
+              arguments.push(node)
+            end
+            ##----------------
 
             if rkelly_node_name == "RKelly::Nodes::VarDeclNode"
               node = eval(rkelly_node_name).new(literal.children[1].children[0].name.to_s, export(literal.children.first), literal.children[2].children[0].name.to_s)
