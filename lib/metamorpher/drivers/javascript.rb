@@ -94,9 +94,10 @@ module Metamorpher
 
         # If we've got a node with multiple children
         # e.g BinaryNode, it has a 'left' and 'right'
-        # These are both children so exception to the standard of 'value'
-        # Being the only child
-        if ast.is_a?(RKelly::Nodes::BinaryNode) || ast.is_a?(RKelly::Nodes::OpEqualNode) || ast.is_a?(RKelly::Nodes::IfNode)
+        if ast.is_a?(RKelly::Nodes::BinaryNode) ||
+          ast.is_a?(RKelly::Nodes::OpEqualNode) ||
+          ast.is_a?(RKelly::Nodes::IfNode) ||
+          ast.is_a?(RKelly::Nodes::ForNode)
           attributes
         else
           # Get the nodes constructor parameters
@@ -107,10 +108,17 @@ module Metamorpher
           node_parameters.each do |parameter|
             # Get the parameter name
             attribute_name = parameter[1].to_s
+
             # if the parameter is not 'value', i.e not the nodes child
-            if attribute_name != 'value'
+            if (attribute_name != 'value' && !ast.is_a?(RKelly::Nodes::PostfixNode))
               # Get the parameter value
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
+              attributes.push([attribute_name, attribute_value])
+            elsif (attribute_name != 'operand' && ast.is_a?(RKelly::Nodes::PostfixNode))
+              # PostFixNode is different to all other nodes
+              # it inherits 'value' from Node however it's not a child node
+              # parameter 'operator' -> super(operator) i.e value
+              attribute_value = ast.instance_variable_get("@value")
               attributes.push([attribute_name, attribute_value])
             end
           end
@@ -119,6 +127,7 @@ module Metamorpher
       end
 
       def export(literal)
+        puts literal.name
         # if node is not a primitive
         if literal.name.to_s.include? "RKelly::Nodes::"
           # Get name of RKelly node stored in literal e.g SourceElementsNode
@@ -236,7 +245,8 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('if(true) 4; else 5;')
+ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
+#ast = javascript.parse('if(true) 4; else 5;')
 #ast = javascript.parse('var x = 2+2;
 #var y = 5-1;
 #var z = 4+2;')
