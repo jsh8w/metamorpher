@@ -67,25 +67,22 @@ module Metamorpher
         ast.each do |node|
           all_nodes.push(node)
         end
+        all_nodes.shift
 
-        # if there is at least 1 node 'below' node in question
-        if all_nodes.length > 1
-          # Get first grandchild node
-          grandchild_node = []
-          all_nodes[1].each_with_index do |node, index|
-            grandchild_node.push(node) if index == 1
-          end
+        # While there are still nodes to inspect
+        while !all_nodes.empty? do
+          # First element of array is a child
+          child_nodes.push(all_nodes[0])
 
-          # Loop through all nodes below original node
-          all_nodes[1..all_nodes.length].each do |node|
-            # if we've reached grandchild level of tree, break
-            # else we've found a child, so add to array
-            if node == grandchild_node[0]
-              break
-            else
-              child_nodes.push(node)
-            end
+          # Get all children below the child
+          grandchild_nodes = []
+          all_nodes[0].each do |grandchild|
+            grandchild_nodes.push(grandchild)
           end
+          #---------------
+
+          # Remove grandchildren from nodes to inspect
+          all_nodes = all_nodes - grandchild_nodes
         end
 
         child_nodes
@@ -95,10 +92,11 @@ module Metamorpher
         # Attributes array to return
         attributes = []
 
-        # if node is a BinaryNode, it has a 'left' and 'right'
+        # If we've got a node with multiple children
+        # e.g BinaryNode, it has a 'left' and 'right'
         # These are both children so exception to the standard of 'value'
         # Being the only child
-        if ast.is_a?(RKelly::Nodes::BinaryNode)
+        if ast.is_a?(RKelly::Nodes::BinaryNode) || ast.is_a?(RKelly::Nodes::OpEqualNode) || ast.is_a?(RKelly::Nodes::IfNode)
           attributes
         else
           # Get the nodes constructor parameters
@@ -129,62 +127,28 @@ module Metamorpher
           # Create full RKelly node name e.g RKelly::Nodes::SourceElementsNode
           rkelly_node_name = "RKelly::Nodes::#{node_name}"
 
+          # Nodes that require array as argument
+          array_nodes = ["Arguments", "Array", "CaseBlock", "ConstStatement", "ObjectLiteral", "SourceElements", "VarStatement"]
+
           # if node has > 1 children
           if literal.children.length > 1
-            # Get constructor paramters of the node we're creating
-            node_object = Object::const_get(rkelly_node_name)
-            node_parameters = node_object.instance_method(:initialize).parameters
-            parameters = []
-
-            node_parameters.each do |parameter|
-              attribute_name = parameter[1].to_s
-              parameters.push(attribute_name)
-            end
-            ##----------------
+            # Get constructor parameters of the node we're creating
+            parameters = get_rkelly_node_parameters(rkelly_node_name)
 
             # Create array of arguments in same order as parameters
-            # Match a nodes attributes onto parameters
-            arguments = []
-            child_nodes = []
-            literal.children.each do |node|
-              match = false
-              parameters.each_with_index do |parameter, index|
-                if parameter == node.name.to_s
-                  arguments[index] = node.children[0].name.to_s
-                  match = true
-                end
-              end
-              if match == false
-                child_nodes.push(node)
-              end
+            arguments = construct_rkelly_node_arguments(literal, parameters)
+
+            # if node requires array as argument
+            if array_nodes.any? { |node| rkelly_node_name.include?(node) }
+              node = eval(rkelly_node_name).new([*arguments])
+            else
+              node = eval(rkelly_node_name).new(*arguments)
             end
 
-            # Add actual RKelly child nodes at first free element in array
-            child_nodes.each do |node|
-              arguments.each_with_index do |argument, index|
-                if argument.nil?
-                  arguments[index] = child_nodes.shift
-                end
-              end
-            end
-
-            # If nodes have not yet been matched, add onto the end of array
-            child_nodes.each do |node|
-              arguments.push(node)
-            end
-            ##----------------
-
-            if rkelly_node_name == "RKelly::Nodes::VarDeclNode"
-              node = eval(rkelly_node_name).new(literal.children[1].children[0].name.to_s, export(literal.children.first), literal.children[2].children[0].name.to_s)
-            elsif rkelly_node_name == "RKelly::Nodes::AddNode"
-              node = eval(rkelly_node_name).new(export(literal.children.first), export(literal.children.last))
-            end
           else
             # Node has a single child. e,g SourceElementsNode etc
             # if child node is not a leaf node
             if literal.children.first.name.to_s.include? "RKelly::Nodes::"
-              # Nodes that require array as argument
-              array_nodes = ["Arguments", "Array", "CaseBlock", "ConstStatement", "ObjectLiteral", "SourceElements", "VarStatement"]
               # if node requires array as argument
               if array_nodes.any? { |node| rkelly_node_name.include?(node) }
                 node = eval(rkelly_node_name).new([export(literal.children.first)])
@@ -197,6 +161,54 @@ module Metamorpher
             end
           end
         end
+      end
+
+      def get_rkelly_node_parameters(rkelly_node_name)
+        node_object = Object::const_get(rkelly_node_name)
+        node_parameters = node_object.instance_method(:initialize).parameters
+        parameters = []
+
+        node_parameters.each do |parameter|
+          attribute_name = parameter[1].to_s
+          parameters.push(attribute_name)
+        end
+
+        parameters
+      end
+
+      def construct_rkelly_node_arguments(literal, parameters)
+        # Match a nodes attributes onto parameters
+        arguments = []
+        child_nodes = []
+        literal.children.each do |node|
+          match = false
+          parameters.each_with_index do |parameter, index|
+            if parameter == node.name.to_s
+              arguments[index] = node.children[0].name.to_s
+              match = true
+            end
+          end
+          if match == false
+            child_nodes.push(node)
+          end
+        end
+
+        # Add actual RKelly child nodes at first free element in array
+        child_nodes.each do |node|
+          arguments.each_with_index do |argument, index|
+            if argument.nil?
+              arguments[index] = export(child_nodes.shift)
+            end
+          end
+        end
+
+        # If nodes have not yet been matched, add onto the end of array
+        child_nodes.each do |node|
+          arguments.push(export(node))
+        end
+        ##----------------
+
+        arguments
       end
 
       def keyword?(literal)
@@ -224,7 +236,10 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('var x = 2 + 2;')
+ast = javascript.parse('if(true) 4; else 5;')
+#ast = javascript.parse('var x = 2+2;
+#var y = 5-1;
+#var z = 4+2;')
 # puts ast
 code = javascript.unparse(ast)
 puts code
