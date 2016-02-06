@@ -28,6 +28,11 @@ module Metamorpher
       end
 
       def create_literal_for(ast)
+        puts ast
+        ast.each do |node|
+          puts node
+        end
+        puts '--------'
         # if ast is an RKelly node. i.e not an attribute of a node
         if ast.is_a?(RKelly::Nodes::Node)
           # Get child nodes for node in question
@@ -97,7 +102,9 @@ module Metamorpher
         if ast.is_a?(RKelly::Nodes::BinaryNode) ||
           ast.is_a?(RKelly::Nodes::OpEqualNode) ||
           ast.is_a?(RKelly::Nodes::IfNode) ||
-          ast.is_a?(RKelly::Nodes::ForNode)
+          ast.is_a?(RKelly::Nodes::ForNode)||
+          ast.is_a?(RKelly::Nodes::ForInNode)||
+          ast.is_a?(RKelly::Nodes::CommaNode)
           attributes
         else
           # Get the nodes constructor parameters
@@ -127,7 +134,6 @@ module Metamorpher
       end
 
       def export(literal)
-        puts literal.name
         # if node is not a primitive
         if literal.name.to_s.include? "RKelly::Nodes::"
           # Get name of RKelly node stored in literal e.g SourceElementsNode
@@ -245,7 +251,7 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
+#ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
 #ast = javascript.parse('if(true) 4; else 5;')
 #ast = javascript.parse('var x = 2+2;
 #var y = 5-1;
