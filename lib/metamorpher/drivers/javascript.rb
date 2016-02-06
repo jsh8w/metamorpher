@@ -115,7 +115,8 @@ module Metamorpher
             # if the parameter is not 'value', i.e not the nodes child
             if (attribute_name != 'value' &&
               !ast.is_a?(RKelly::Nodes::PostfixNode) &&
-              !ast.is_a?(RKelly::Nodes::TryNode))
+              !ast.is_a?(RKelly::Nodes::TryNode) &&
+              !ast.is_a?(RKelly::Nodes::DotAccessorNode))
               # Get the parameter value
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
               attributes.push([attribute_name, attribute_value])
@@ -134,9 +135,15 @@ module Metamorpher
               # 'catch_block' is a child node 'catch_block'
               # 'finally_block' is a child node 'finally_block'
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
+              # finally_block is optional so need to check if nil
               unless attribute_value.nil?
                 attributes.push([attribute_name, attribute_value])
               end
+            elsif (attribute_name != 'resolve' && ast.is_a?(RKelly::Nodes::DotAccessorNode))
+              # DotAccessorNode only has resolve as a child
+              # Need to get the 'accessor'
+              attribute_value = ast.instance_variable_get("@#{attribute_name}")
+              attributes.push([attribute_name, attribute_value])
             end
           end
           attributes
@@ -261,6 +268,12 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
+ast = javascript.parse('var person={
+    name: "jack",
+    email: "jack@ctu.com",
+    twitter: "jackb_ctu"
+};
+var name = person.name')
 #ast = javascript.parse('var x = [1,2,3,4];
 #y = x[1]')
 # ast = javascript.parse('var message, x;
