@@ -99,7 +99,8 @@ module Metamorpher
           ast.is_a?(RKelly::Nodes::IfNode) ||
           ast.is_a?(RKelly::Nodes::ForNode)||
           ast.is_a?(RKelly::Nodes::ForInNode)||
-          ast.is_a?(RKelly::Nodes::CommaNode)
+          ast.is_a?(RKelly::Nodes::CommaNode) ||
+          ast.is_a?(RKelly::Nodes::BracketAccessorNode)
           attributes
         else
           # Get the nodes constructor parameters
@@ -260,6 +261,8 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
+#ast = javascript.parse('var x = [1,2,3,4];
+#y = x[1]')
 # ast = javascript.parse('var message, x;
 #     message = "";
 #     x = 11;
