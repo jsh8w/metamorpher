@@ -28,11 +28,6 @@ module Metamorpher
       end
 
       def create_literal_for(ast)
-        puts ast
-        ast.each do |node|
-          puts node
-        end
-        puts '--------'
         # if ast is an RKelly node. i.e not an attribute of a node
         if ast.is_a?(RKelly::Nodes::Node)
           # Get child nodes for node in question
@@ -117,7 +112,9 @@ module Metamorpher
             attribute_name = parameter[1].to_s
 
             # if the parameter is not 'value', i.e not the nodes child
-            if (attribute_name != 'value' && !ast.is_a?(RKelly::Nodes::PostfixNode))
+            if (attribute_name != 'value' &&
+              !ast.is_a?(RKelly::Nodes::PostfixNode) &&
+              !ast.is_a?(RKelly::Nodes::TryNode))
               # Get the parameter value
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
               attributes.push([attribute_name, attribute_value])
@@ -127,6 +124,18 @@ module Metamorpher
               # parameter 'operator' -> super(operator) i.e value
               attribute_value = ast.instance_variable_get("@value")
               attributes.push([attribute_name, attribute_value])
+            elsif (attribute_name != 'value' &&
+              attribute_name != 'catch_block' &&
+              attribute_name != 'finally_block' &&
+              ast.is_a?(RKelly::Nodes::TryNode))
+              # TryNode is different to all other nodes
+              # 'value' is a child node 'try_block'
+              # 'catch_block' is a child node 'catch_block'
+              # 'finally_block' is a child node 'finally_block'
+              attribute_value = ast.instance_variable_get("@#{attribute_name}")
+              unless attribute_value.nil?
+                attributes.push([attribute_name, attribute_value])
+              end
             end
           end
           attributes
@@ -251,6 +260,17 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
+# ast = javascript.parse('var message, x;
+#     message = "";
+#     x = 11;
+#     try {
+#         if(message == "") throw "is empty";
+#         if(x > 10) throw "is too high";
+#         if(x < 5) throw "is too low";
+#     }
+#     catch(err) {
+#         message = "Error";
+#     }')
 #ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
 #ast = javascript.parse('if(true) 4; else 5;')
 #ast = javascript.parse('var x = 2+2;
