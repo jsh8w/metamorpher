@@ -94,13 +94,15 @@ module Metamorpher
 
         # If we've got a node with multiple children
         # e.g BinaryNode, it has a 'left' and 'right'
+        # Nodes with no extra attributes not represented as nodes
         if ast.is_a?(RKelly::Nodes::BinaryNode) ||
           ast.is_a?(RKelly::Nodes::OpEqualNode) ||
           ast.is_a?(RKelly::Nodes::IfNode) ||
           ast.is_a?(RKelly::Nodes::ForNode)||
           ast.is_a?(RKelly::Nodes::ForInNode)||
           ast.is_a?(RKelly::Nodes::CommaNode) ||
-          ast.is_a?(RKelly::Nodes::BracketAccessorNode)
+          ast.is_a?(RKelly::Nodes::BracketAccessorNode) ||
+          ast.is_a?(RKelly::Nodes::FunctionCallNode)
           attributes
         else
           # Get the nodes constructor parameters
@@ -268,12 +270,13 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('var person={
-    name: "jack",
-    email: "jack@ctu.com",
-    twitter: "jackb_ctu"
-};
-var name = person.name')
+ast = javascript.parse('myFunction(10, 2);')
+# ast = javascript.parse('var person={
+#     name: "jack",
+#     email: "jack@ctu.com",
+#     twitter: "jackb_ctu"
+# };
+# var name = person.name')
 #ast = javascript.parse('var x = [1,2,3,4];
 #y = x[1]')
 # ast = javascript.parse('var message, x;
