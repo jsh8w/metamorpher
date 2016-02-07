@@ -119,7 +119,8 @@ module Metamorpher
             if (attribute_name != 'value' &&
               !ast.is_a?(RKelly::Nodes::PostfixNode) &&
               !ast.is_a?(RKelly::Nodes::TryNode) &&
-              !ast.is_a?(RKelly::Nodes::DotAccessorNode))
+              !ast.is_a?(RKelly::Nodes::DotAccessorNode) &&
+              !ast.is_a?(RKelly::Nodes::FunctionExprNode))
               # Get the parameter value
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
               attributes.push([attribute_name, attribute_value])
@@ -146,6 +147,11 @@ module Metamorpher
               # DotAccessorNode only has resolve as a child
               # Need to get the 'accessor'
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
+              attributes.push([attribute_name, attribute_value])
+            elsif (attribute_name == 'name' && ast.is_a?(RKelly::Nodes::FunctionExprNode))
+              # FunctionExprNode has 'function_body' and 'arguments' as children
+              # Need to get the 'name' which is it's 'value'
+              attribute_value = ast.instance_variable_get("@value")
               attributes.push([attribute_name, attribute_value])
             end
           end
@@ -228,18 +234,54 @@ module Metamorpher
           end
         end
 
+        # A FunctionDecl(Expr)Node requires 'parameter' children to be combined into an array
+        # This block reconstructs the child_nodes array
+        # By constructing an argument array and adding to to the child_nodes array
+        if (literal.name.to_s.include?("RKelly::Nodes::FunctionDeclNode") ||
+          literal.name.to_s.include?("RKelly::Nodes::FunctionExprNode"))
+          function_arguments = []
+          child_nodes.delete_if do |node|
+            if node.name.to_s.include?("RKelly::Nodes::ParameterNode")
+              function_arguments.push(node)
+              true
+            end
+          end
+          child_nodes.push(function_arguments)
+        end
+
         # Add actual RKelly child nodes at first free element in array
         child_nodes.each do |node|
           arguments.each_with_index do |argument, index|
             if argument.nil?
-              arguments[index] = export(child_nodes.shift)
+              # Check if we've got Parameters array for FunctionDeclNode
+              # Then export each parameter and add array to arguments
+              if node.kind_of?(Array)
+                params = []
+                node.each do |parameter_node|
+                  params.push(export(parameter_node))
+                end
+                arguments[index] = params
+                child_nodes.shift
+              else
+                arguments[index] = export(child_nodes.shift)
+              end
             end
           end
         end
 
         # If nodes have not yet been matched, add onto the end of array
         child_nodes.each do |node|
-          arguments.push(export(node))
+          # Check if we've got Parameters array for FunctionDeclNode
+          # Then export each parameter and add array to arguments
+          if node.kind_of?(Array)
+            params = []
+            node.each do |parameter_node|
+              params.push(export(parameter_node))
+            end
+            arguments.push(params)
+          else
+            arguments.push(export(node))
+          end
         end
         ##----------------
 
@@ -271,7 +313,9 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('var person = new Object();')
+ast = javascript.parse('function myFunction(p1, p2, p3, p4) {
+    return p1 * p2 * p3 * p4;
+}')
 # ast = javascript.parse('var person={
 #     name: "jack",
 #     email: "jack@ctu.com",
@@ -293,9 +337,9 @@ ast = javascript.parse('var person = new Object();')
 #     }')
 #ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
 #ast = javascript.parse('if(true) 4; else 5;')
-#ast = javascript.parse('var x = 2+2;
-#var y = 5-1;
-#var z = 4+2;')
+# ast = javascript.parse('var x = 2+2;
+# var y = 5-1;
+# var z = 4+2;')
 # puts ast
 code = javascript.unparse(ast)
 puts code
