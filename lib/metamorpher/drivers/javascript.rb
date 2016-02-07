@@ -313,15 +313,15 @@ module Metamorpher
 end
 
 javascript = Metamorpher::Drivers::JavaScript.new
-ast = javascript.parse('function myFunction(p1, p2, p3, p4) {
-    return p1 * p2 * p3 * p4;
-}')
-# ast = javascript.parse('var person={
-#     name: "jack",
-#     email: "jack@ctu.com",
-#     twitter: "jackb_ctu"
-# };
-# var name = person.name')
+# ast = javascript.parse('function myFunction(p1, p2, p3, p4) {
+#     return p1 * p2 * p3 * p4;
+# }')
+ast = javascript.parse('var person={
+    name: "jack",
+    email: "jack@ctu.com",
+    twitter: "jackb_ctu"
+};
+var name = person.name')
 #ast = javascript.parse('var x = [1,2,3,4];
 #y = x[1]')
 # ast = javascript.parse('var message, x;
