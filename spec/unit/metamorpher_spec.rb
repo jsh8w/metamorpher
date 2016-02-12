@@ -17,6 +17,17 @@ module Metamorpher
         subject.configure(builder: :ruby)
         expect(subject.builder).to be_kind_of(Builders::Ruby::Builder)
       end
+
+      it "should be possible to change to a JavaScript builder" do
+        subject.configure(builder: :javascript)
+        expect(subject.builder).to be_kind_of(Builders::JavaScript::Builder)
+      end
+
+      it "should be possible to change back to the Ruby builder" do
+        subject.configure(builder: :javascript)
+        subject.configure(builder: :ruby)
+        expect(subject.builder).to be_kind_of(Builders::Ruby::Builder)
+      end
     end
   end
 end

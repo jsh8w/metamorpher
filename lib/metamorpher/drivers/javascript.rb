@@ -36,7 +36,7 @@ module Metamorpher
           # Check if this node has any 'attributes'
           # Returned as e.g [[attribute_name, attribute_value]]
           attributes = get_node_attribute_names(ast)
-          children = children + attributes
+          children += attributes
 
           # if there are no children (i.e we're at a leaf node)
           if children.empty?
@@ -70,7 +70,7 @@ module Metamorpher
         all_nodes.shift
 
         # While there are still nodes to inspect
-        while !all_nodes.empty? do
+        until all_nodes.empty?
           # First element of array is a child
           child_nodes.push(all_nodes[0])
 
@@ -82,7 +82,7 @@ module Metamorpher
           #---------------
 
           # Remove grandchildren from nodes to inspect
-          all_nodes = all_nodes - grandchild_nodes
+          all_nodes -= grandchild_nodes
         end
 
         child_nodes
@@ -96,14 +96,12 @@ module Metamorpher
         # e.g BinaryNode, it has a 'left' and 'right'
         # Nodes with no extra attributes not represented as nodes
         if ast.is_a?(RKelly::Nodes::BinaryNode) ||
-          ast.is_a?(RKelly::Nodes::OpEqualNode) ||
-          ast.is_a?(RKelly::Nodes::IfNode) ||
-          ast.is_a?(RKelly::Nodes::ForNode)||
-          ast.is_a?(RKelly::Nodes::ForInNode)||
-          ast.is_a?(RKelly::Nodes::CommaNode) ||
-          ast.is_a?(RKelly::Nodes::BracketAccessorNode) ||
-          ast.is_a?(RKelly::Nodes::FunctionCallNode) ||
-          ast.is_a?(RKelly::Nodes::NewExprNode)
+           ast.is_a?(RKelly::Nodes::OpEqualNode) ||
+           ast.is_a?(RKelly::Nodes::IfNode) ||
+           ast.is_a?(RKelly::Nodes::ForNode) || ast.is_a?(RKelly::Nodes::ForInNode) || ast.is_a?(RKelly::Nodes::CommaNode) ||
+           ast.is_a?(RKelly::Nodes::BracketAccessorNode) ||
+           ast.is_a?(RKelly::Nodes::FunctionCallNode) ||
+           ast.is_a?(RKelly::Nodes::NewExprNode)
           attributes
         else
           # Get the nodes constructor parameters
@@ -116,24 +114,24 @@ module Metamorpher
             attribute_name = parameter[1].to_s
 
             # if the parameter is not 'value', i.e not the nodes child
-            if (attribute_name != 'value' &&
-              !ast.is_a?(RKelly::Nodes::PostfixNode) &&
-              !ast.is_a?(RKelly::Nodes::TryNode) &&
-              !ast.is_a?(RKelly::Nodes::DotAccessorNode) &&
-              !ast.is_a?(RKelly::Nodes::FunctionExprNode))
+            if attribute_name != 'value' &&
+               !ast.is_a?(RKelly::Nodes::PostfixNode) &&
+               !ast.is_a?(RKelly::Nodes::TryNode) &&
+               !ast.is_a?(RKelly::Nodes::DotAccessorNode) &&
+               !ast.is_a?(RKelly::Nodes::FunctionExprNode)
               # Get the parameter value
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
               attributes.push([attribute_name, attribute_value])
-            elsif (attribute_name != 'operand' && ast.is_a?(RKelly::Nodes::PostfixNode))
+            elsif attribute_name != 'operand' && ast.is_a?(RKelly::Nodes::PostfixNode)
               # PostFixNode is different to all other nodes
               # it inherits 'value' from Node however it's not a child node
               # parameter 'operator' -> super(operator) i.e value
               attribute_value = ast.instance_variable_get("@value")
               attributes.push([attribute_name, attribute_value])
-            elsif (attribute_name != 'value' &&
-              attribute_name != 'catch_block' &&
-              attribute_name != 'finally_block' &&
-              ast.is_a?(RKelly::Nodes::TryNode))
+            elsif attribute_name != 'value' &&
+                  attribute_name != 'catch_block' &&
+                  attribute_name != 'finally_block' &&
+                  ast.is_a?(RKelly::Nodes::TryNode)
               # TryNode is different to all other nodes
               # 'value' is a child node 'try_block'
               # 'catch_block' is a child node 'catch_block'
@@ -143,12 +141,12 @@ module Metamorpher
               unless attribute_value.nil?
                 attributes.push([attribute_name, attribute_value])
               end
-            elsif (attribute_name != 'resolve' && ast.is_a?(RKelly::Nodes::DotAccessorNode))
+            elsif attribute_name != 'resolve' && ast.is_a?(RKelly::Nodes::DotAccessorNode)
               # DotAccessorNode only has resolve as a child
               # Need to get the 'accessor'
               attribute_value = ast.instance_variable_get("@#{attribute_name}")
               attributes.push([attribute_name, attribute_value])
-            elsif (attribute_name == 'name' && ast.is_a?(RKelly::Nodes::FunctionExprNode))
+            elsif attribute_name == 'name' && ast.is_a?(RKelly::Nodes::FunctionExprNode)
               # FunctionExprNode has 'function_body' and 'arguments' as children
               # Need to get the 'name' which is it's 'value'
               attribute_value = ast.instance_variable_get("@value")
@@ -169,7 +167,7 @@ module Metamorpher
           rkelly_node_name = "RKelly::Nodes::#{node_name}"
 
           # Nodes that require array as argument
-          array_nodes = ["Arguments", "Array", "CaseBlock", "ConstStatement", "ObjectLiteral", "SourceElements", "VarStatement"]
+          array_nodes = %w(Arguments Array CaseBlock ConstStatement ObjectLiteral SourceElements VarStatement)
 
           # if node has > 1 children
           if literal.children.length > 1
@@ -205,7 +203,7 @@ module Metamorpher
       end
 
       def get_rkelly_node_parameters(rkelly_node_name)
-        node_object = Object::const_get(rkelly_node_name)
+        node_object = Object.const_get(rkelly_node_name)
         node_parameters = node_object.instance_method(:initialize).parameters
         parameters = []
 
@@ -229,16 +227,14 @@ module Metamorpher
               match = true
             end
           end
-          if match == false
-            child_nodes.push(node)
-          end
+          child_nodes.push(node) if match == false
         end
 
         # A FunctionDecl(Expr)Node requires 'parameter' children to be combined into an array
         # This block reconstructs the child_nodes array
         # By constructing an argument array and adding to to the child_nodes array
-        if (literal.name.to_s.include?("RKelly::Nodes::FunctionDeclNode") ||
-          literal.name.to_s.include?("RKelly::Nodes::FunctionExprNode"))
+        if literal.name.to_s.include?("RKelly::Nodes::FunctionDeclNode") ||
+           literal.name.to_s.include?("RKelly::Nodes::FunctionExprNode")
           function_arguments = []
           child_nodes.delete_if do |node|
             if node.name.to_s.include?("RKelly::Nodes::ParameterNode")
@@ -255,7 +251,7 @@ module Metamorpher
             if argument.nil?
               # Check if we've got Parameters array for FunctionDeclNode
               # Then export each parameter and add array to arguments
-              if node.kind_of?(Array)
+              if node.is_a?(Array)
                 params = []
                 node.each do |parameter_node|
                   params.push(export(parameter_node))
@@ -273,7 +269,7 @@ module Metamorpher
         child_nodes.each do |node|
           # Check if we've got Parameters array for FunctionDeclNode
           # Then export each parameter and add array to arguments
-          if node.kind_of?(Array)
+          if node.is_a?(Array)
             params = []
             node.each do |parameter_node|
               params.push(export(parameter_node))
@@ -312,18 +308,18 @@ module Metamorpher
   end
 end
 
-javascript = Metamorpher::Drivers::JavaScript.new
+#javascript = Metamorpher::Drivers::JavaScript.new
 # ast = javascript.parse('function myFunction(p1, p2, p3, p4) {
 #     return p1 * p2 * p3 * p4;
 # }')
-ast = javascript.parse('var person={
-    name: "jack",
-    email: "jack@ctu.com",
-    twitter: "jackb_ctu"
-};
-var name = person.name')
-#ast = javascript.parse('var x = [1,2,3,4];
-#y = x[1]')
+# ast = javascript.parse('var person={
+#     name: "jack",
+#     email: "jack@ctu.com",
+#     twitter: "jackb_ctu"
+# };
+# var name = person.name')
+# ast = javascript.parse('var x = [1,2,3,4];
+# y = x[1]')
 # ast = javascript.parse('var message, x;
 #     message = "";
 #     x = 11;
@@ -335,11 +331,11 @@ var name = person.name')
 #     catch(err) {
 #         message = "Error";
 #     }')
-#ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
-#ast = javascript.parse('if(true) 4; else 5;')
+# ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
+# ast = javascript.parse('if(true) 4; else 5;')
 # ast = javascript.parse('var x = 2+2;
 # var y = 5-1;
 # var z = 4+2;')
 # puts ast
-code = javascript.unparse(ast)
-puts code
+#code = javascript.unparse(ast)
+#puts code

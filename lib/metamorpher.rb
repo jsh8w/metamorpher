@@ -1,5 +1,6 @@
 require "metamorpher/version"
 require "metamorpher/builders/ruby"
+require "metamorpher/builders/javascript"
 
 require "metamorpher/support/map_at"
 
@@ -25,7 +26,7 @@ module Metamorpher
   end
 
   def self.builder_class_for(name)
-    namespace = name == :ast ? "AST" : name.to_s.capitalize
+    namespace = name == :ast ? "AST" : (name == :javascript ? "JavaScript" : name.to_s.capitalize)
     Builders.const_get(namespace).const_get("Builder")
   end
 end
