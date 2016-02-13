@@ -308,7 +308,7 @@ module Metamorpher
   end
 end
 
-#javascript = Metamorpher::Drivers::JavaScript.new
+# javascript = Metamorpher::Drivers::JavaScript.new
 # ast = javascript.parse('function myFunction(p1, p2, p3, p4) {
 #     return p1 * p2 * p3 * p4;
 # }')
@@ -337,5 +337,5 @@ end
 # var y = 5-1;
 # var z = 4+2;')
 # puts ast
-#code = javascript.unparse(ast)
-#puts code
+# code = javascript.unparse(ast)
+# puts code

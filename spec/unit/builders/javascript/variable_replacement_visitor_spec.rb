@@ -3,7 +3,7 @@ require "metamorpher/builders/javascript/variable_replacement_visitor"
 module Metamorpher
   module Builders
     module JavaScript
-      describe VariableReplacementVisitor, focus: true do
+      describe VariableReplacementVisitor do
         let(:builder) { Metamorpher::Builders::AST::Builder.new }
         let(:replacement) { builder.literal!(:bar) }
         subject { VariableReplacementVisitor.new(:foo, replacement) }

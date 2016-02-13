@@ -1,16 +1,17 @@
 require "metamorpher"
 
-describe Metamorpher.builder do
+describe Metamorpher, focus: true do
+  subject { Metamorpher.builder }
+  before { Metamorpher.configure(builder: :javascript) }
+
   let(:ast_builder) { Metamorpher::Builders::AST::Builder.new }
 
   describe "when building literals" do
     it "should produce literals from source" do
       expect(subject.build("1 + 1")).to eq(
-        ast_builder.literal!(
-        builder.literal!(
-          RKelly::Nodes::SourceElementsNode, builder.literal!(RKelly::Nodes::ExpressionStatementNode, builder.literal!(RKelly::Nodes::AddNode,
-                                                                                                   builder.literal!(RKelly::Nodes::NumberNode, 2), builder.literal!(RKelly::Nodes::NumberNode, 1))))
-        )
+        ast_builder.literal!(RKelly::Nodes::SourceElementsNode,
+                             ast_builder.literal!(RKelly::Nodes::ExpressionStatementNode, ast_builder.literal!(RKelly::Nodes::AddNode,
+                                                                                                               ast_builder.literal!(RKelly::Nodes::NumberNode, 1), ast_builder.literal!(RKelly::Nodes::NumberNode, 1))))
       )
     end
 
@@ -24,44 +25,33 @@ describe Metamorpher.builder do
   describe "when building programs containing constants" do
     it "should convert uppercase constants to variables" do
       expect(subject.build("LEFT + RIGHT")).to eq(
-        ast_builder.literal!(
-          :send,
-          ast_builder.LEFT,
-          :+,
-          ast_builder.RIGHT
-        )
+        ast_builder.literal!(RKelly::Nodes::SourceElementsNode,
+                             ast_builder.literal!(RKelly::Nodes::ExpressionStatementNode, ast_builder.literal!(RKelly::Nodes::AddNode,
+                                                                                                               ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.LEFT), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.RIGHT))))
       )
     end
 
     it "should convert uppercase messages to variables" do
       expect(subject.build("User.METHOD")).to eq(
-        ast_builder.literal!(
-          :send,
-          ast_builder.literal!(:const, nil, :User),
-          ast_builder.METHOD
-        )
+        ast_builder.literal!(RKelly::Nodes::SourceElementsNode,
+                             ast_builder.literal!(RKelly::Nodes::ExpressionStatementNode, ast_builder.literal!(RKelly::Nodes::DotAccessorNode,
+                                                                                                               ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.literal!('User')), ast_builder.literal!('accessor', ast_builder.METHOD))))
       )
     end
 
     it "should convert uppercase constants ending with underscore to greedy variables" do
       expect(subject.build("LEFT_ + RIGHT_")).to eq(
-        ast_builder.literal!(
-          :send,
-          ast_builder.LEFT_,
-          :+,
-          ast_builder.RIGHT_
-        )
+        ast_builder.literal!(RKelly::Nodes::SourceElementsNode,
+                             ast_builder.literal!(RKelly::Nodes::ExpressionStatementNode, ast_builder.literal!(RKelly::Nodes::AddNode,
+                                                                                                               ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.LEFT_), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.RIGHT_))))
       )
     end
 
     it "should not convert non-uppercase constants to variables" do
       expect(subject.build("Left + RIGHt")).to eq(
-        ast_builder.literal!(
-          :send,
-          ast_builder.const(nil, :Left),
-          :+,
-          ast_builder.const(nil, :RIGHt)
-        )
+        ast_builder.literal!(RKelly::Nodes::SourceElementsNode,
+                             ast_builder.literal!(RKelly::Nodes::ExpressionStatementNode, ast_builder.literal!(RKelly::Nodes::AddNode,
+                                                                                                               ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.literal!('Left')), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.literal!('RIGHt')))))
       )
     end
   end
@@ -126,8 +116,12 @@ describe Metamorpher.builder do
     it "should produce a termset" do
       actual = subject.build("1 + 1", "LEFT + RIGHT")
 
-      expected_literals = ast_builder.literal!(:send, ast_builder.int(1), :+, ast_builder.int(1))
-      expected_variables = ast_builder.literal!(:send, ast_builder.LEFT, :+, ast_builder.RIGHT)
+      expected_literals = ast_builder.literal!(RKelly::Nodes::SourceElementsNode,
+                                               ast_builder.literal!(RKelly::Nodes::ExpressionStatementNode, ast_builder.literal!(RKelly::Nodes::AddNode,
+                                                                                                                                 ast_builder.literal!(RKelly::Nodes::NumberNode, 1), ast_builder.literal!(RKelly::Nodes::NumberNode, 1))))
+      expected_variables = ast_builder.literal!(RKelly::Nodes::SourceElementsNode,
+                                                ast_builder.literal!(RKelly::Nodes::ExpressionStatementNode, ast_builder.literal!(RKelly::Nodes::AddNode,
+                                                                                                                                  ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.LEFT), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.RIGHT))))
       expected = ast_builder.either!(expected_literals, expected_variables)
 
       expect(actual).to eq(expected)

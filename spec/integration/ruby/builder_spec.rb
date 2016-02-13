@@ -1,6 +1,6 @@
 require "metamorpher"
 
-describe Metamorpher.builder do
+describe Metamorpher.builder, focus: true do
   let(:ast_builder) { Metamorpher::Builders::AST::Builder.new }
 
   describe "when building literals" do
