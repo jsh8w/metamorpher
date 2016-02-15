@@ -3,6 +3,7 @@ require "metamorpher/terms/term_set"
 require "metamorpher/builders/javascript/term"
 require "metamorpher/builders/javascript/uppercase_constant_rewriter"
 require "metamorpher/builders/javascript/uppercase_rewriter"
+require "metamorpher/builders/javascript/ast_simplifier"
 
 module Metamorpher
   module Builders
@@ -23,8 +24,18 @@ module Metamorpher
           rewriters.reduce(parsed) { |a, e| e.reduce(a) }
         end
 
+        # Method to remove container nodes of JavaScript Metamorpher AST.
+        # Nodes such as e.g SourceElementsNode
+        def simplify(parsed)
+          simplifier.simplify(parsed)
+        end
+
         def parse(source)
           term = driver.parse(source)
+        end
+
+        def ast_simplifier
+          @simplifier ||= Builders::ASTSimplifier.new
         end
 
         def rewriters
