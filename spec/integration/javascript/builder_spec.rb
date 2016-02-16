@@ -61,7 +61,7 @@ describe Metamorpher, focus: true do
               .ensuring("A") { |n| n > 0 }
               .ensuring("B") { |n| n < 0 }
 
-      first_variable, _operator, last_variable = built.children
+      first_variable, last_variable = built.children
 
       expect(first_variable.name).to eq(:a)
       expect(first_variable.condition.call(1)).to be_truthy
@@ -76,7 +76,7 @@ describe Metamorpher, focus: true do
   describe "when building programs with derivations" do
     it "should create a derivation from a call to deriving" do
       built = subject.build("PLURAL").deriving("PLURAL", "SINGULAR") do |constant|
-        subject.build(constant.children.last.name.to_s + "s")
+        subject.build(constant.name.to_s + "s")
       end
 
       expect(built.base).to eq([:singular])
