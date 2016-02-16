@@ -10,7 +10,7 @@ module Metamorpher
     module JavaScript
       class Builder
         def build(*sources)
-          terms = sources.map { |source| decorate(rewrite(parse(source))) }
+          terms = sources.map { |source| decorate(rewrite(simplify(parse(source)))) }
           terms.size == 1 ? terms.first : Metamorpher::Terms::TermSet.new(terms: terms)
         end
 
@@ -25,7 +25,7 @@ module Metamorpher
         end
 
         # Method to remove container nodes of JavaScript Metamorpher AST.
-        # Nodes such as e.g SourceElementsNode
+        # e.g Nodes that have a single child node
         def simplify(parsed)
           simplifier.simplify(parsed)
         end
@@ -34,8 +34,8 @@ module Metamorpher
           term = driver.parse(source)
         end
 
-        def ast_simplifier
-          @simplifier ||= Builders::ASTSimplifier.new
+        def simplifier
+          @simplifier ||= ASTSimplifier.new
         end
 
         def rewriters
@@ -49,3 +49,7 @@ module Metamorpher
     end
   end
 end
+
+# javascript = Metamorpher::Builders::JavaScript::Builder.new
+# ast = javascript.build('2 + 2;')
+# puts ast
