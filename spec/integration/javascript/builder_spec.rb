@@ -1,6 +1,6 @@
 require "metamorpher"
 
-describe Metamorpher, focus: true do
+describe Metamorpher do
   subject { Metamorpher.builder }
   before { Metamorpher.configure(builder: :javascript) }
 
@@ -9,7 +9,7 @@ describe Metamorpher, focus: true do
   describe "when building literals" do
     it "should produce literals from source" do
       expect(subject.build("1 + 1")).to eq(
-        ast_builder.literal!(RKelly::Nodes::AddNode, 1, 1)
+        ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!(RKelly::Nodes::NumberNode, 1), ast_builder.literal!(RKelly::Nodes::NumberNode, 1))
       )
     end
 
@@ -23,25 +23,25 @@ describe Metamorpher, focus: true do
   describe "when building programs containing constants" do
     it "should convert uppercase constants to variables" do
       expect(subject.build("LEFT + RIGHT")).to eq(
-        ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.LEFT, ast_builder.RIGHT)
+        ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.LEFT), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.RIGHT))
       )
     end
 
     it "should convert uppercase messages to variables" do
       expect(subject.build("User.METHOD")).to eq(
-        ast_builder.literal!(RKelly::Nodes::DotAccessorNode, ast_builder.literal!('User'), ast_builder.METHOD)
+        ast_builder.literal!(RKelly::Nodes::DotAccessorNode, ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.literal!('User')), ast_builder.literal!('accessor', ast_builder.METHOD))
       )
     end
 
     it "should convert uppercase constants ending with underscore to greedy variables" do
       expect(subject.build("LEFT_ + RIGHT_")).to eq(
-        ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.LEFT_, ast_builder.RIGHT_)
+        ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.LEFT_), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.RIGHT_))
       )
     end
 
     it "should not convert non-uppercase constants to variables" do
       expect(subject.build("Left + RIGHt")).to eq(
-        ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!('Left'), ast_builder.literal!('RIGHt'))
+        ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.literal!('Left')), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.literal!('RIGHt')))
       )
     end
   end
@@ -50,9 +50,11 @@ describe Metamorpher, focus: true do
     it "should create a conditional variable from a call to ensuring" do
       built = subject.build("A").ensuring("A") { |n| n > 0 }
 
-      expect(built.name).to eq(:a)
-      expect(built.condition.call(1)).to be_truthy
-      expect(built.condition.call(-1)).to be_falsey
+      first_variable = built.children.first
+
+      expect(first_variable.name).to eq(:a)
+      expect(first_variable.condition.call(1)).to be_truthy
+      expect(first_variable.condition.call(-1)).to be_falsey
     end
 
     it "should create several conditional variables from several calls to ensuring" do
@@ -61,7 +63,8 @@ describe Metamorpher, focus: true do
               .ensuring("A") { |n| n > 0 }
               .ensuring("B") { |n| n < 0 }
 
-      first_variable, last_variable = built.children
+      first_variable = built.children.first.children.first
+      last_variable = built.children.last.children.last
 
       expect(first_variable.name).to eq(:a)
       expect(first_variable.condition.call(1)).to be_truthy
@@ -76,17 +79,21 @@ describe Metamorpher, focus: true do
   describe "when building programs with derivations" do
     it "should create a derivation from a call to deriving" do
       built = subject.build("PLURAL").deriving("PLURAL", "SINGULAR") do |constant|
-        subject.build(constant.name.to_s + "s")
+        subject.build(constant.children.first.name.to_s + "s")
       end
 
-      expect(built.base).to eq([:singular])
-      expect(built.derivation.call(subject.build("dog"))).to eq(subject.build("dogs"))
+      first_variable = built.children.first
+
+      expect(first_variable.base).to eq([:singular])
+      expect(first_variable.derivation.call(subject.build("dog"))).to eq(subject.build("dogs"))
     end
 
     it "should create a derivation with multiple bases from a call to deriving" do
       built = subject.build("HASH").deriving("HASH", "KEY", "VALUE") {}
 
-      expect(built.base).to eq([:key, :value])
+      first_variable = built.children.first
+
+      expect(first_variable.base).to eq([:key, :value])
     end
 
     it "should create several derivations from several calls to deriving" do
@@ -95,7 +102,8 @@ describe Metamorpher, focus: true do
               .deriving("NEW_FIRST", "FIRST") {}
               .deriving("NEW_LAST", "LAST") {}
 
-      first_derived, last_derived = built.children
+      first_derived = built.children.first.children.first
+      last_derived = built.children.last.children.last
 
       expect(first_derived.base).to eq([:first])
       expect(last_derived.base).to eq([:last])
@@ -106,9 +114,9 @@ describe Metamorpher, focus: true do
     it "should produce a termset" do
       actual = subject.build("1 + 1", "LEFT + RIGHT")
 
-      expected_literals = ast_builder.literal!(RKelly::Nodes::AddNode, 1, 1)
+      expected_literals = ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!(RKelly::Nodes::NumberNode, 1), ast_builder.literal!(RKelly::Nodes::NumberNode, 1))
 
-      expected_variables = ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.LEFT, ast_builder.RIGHT)
+      expected_variables = ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.LEFT), ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.RIGHT))
 
       expected = ast_builder.either!(expected_literals, expected_variables)
 

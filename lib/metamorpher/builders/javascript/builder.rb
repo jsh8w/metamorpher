@@ -49,7 +49,3 @@ module Metamorpher
     end
   end
 end
-
-# javascript = Metamorpher::Builders::JavaScript::Builder.new
-# ast = javascript.build('2 + 2;')
-# puts ast

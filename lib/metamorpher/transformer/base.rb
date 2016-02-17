@@ -2,6 +2,7 @@ require "metamorpher/transformer/merger"
 require "metamorpher/transformer/site"
 require "metamorpher/rewriter/rule"
 require "metamorpher/drivers/ruby"
+require "metamorpher/drivers/javascript"
 
 module Metamorpher
   module Transformer
