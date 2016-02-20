@@ -26,7 +26,7 @@ module Metamorpher
       end
 
       def driver
-        @driver ||= Metamorpher::Drivers::Ruby.new
+        @driver ||= Metamorpher::Drivers::JavaScript.new
       end
 
       private

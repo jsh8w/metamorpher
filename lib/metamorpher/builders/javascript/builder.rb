@@ -4,18 +4,19 @@ require "metamorpher/builders/javascript/term"
 require "metamorpher/builders/javascript/uppercase_constant_rewriter"
 require "metamorpher/builders/javascript/uppercase_rewriter"
 require "metamorpher/builders/javascript/ast_simplifier"
+require "metamorpher/builders/javascript/pattern_termset_rewriter"
 
 module Metamorpher
   module Builders
     module JavaScript
       class Builder
         def build(*sources)
-          terms = sources.map { |source| decorate(rewrite(simplify(parse(source), false))) }
+          terms = sources.map { |source| decorate(rewrite(simplify(parse(source)))) }
           terms.size == 1 ? terms.first : Metamorpher::Terms::TermSet.new(terms: terms)
         end
 
         def build_pattern(*sources)
-          terms = sources.map { |source| decorate(rewrite(simplify(parse(source), true))) }
+          terms = sources.map { |source| decorate(rewrite(termsetify(simplify(parse(source))))) }
           terms.size == 1 ? terms.first : Metamorpher::Terms::TermSet.new(terms: terms)
         end
 
@@ -29,14 +30,26 @@ module Metamorpher
           rewriters.reduce(parsed) { |a, e| e.reduce(a) }
         end
 
+        # Method to introduce TermSets into pattern ASTs
+        # Required because JavaScript AST leaf node's parents can be different types
+        # e.g 'A' could be ResolveNode -> A or NumberNode -> A etc
+        # TermSet constructed for all possibilities
+        def termsetify(simplified)
+          termsetifier.termsetify(simplified)
+        end
+
         # Method to remove container nodes of JavaScript Metamorpher AST.
         # e.g Nodes that have a single child node
-        def simplify(parsed, is_pattern)
-          simplifier.simplify(parsed, is_pattern)
+        def simplify(parsed)
+          simplifier.simplify(parsed)
         end
 
         def parse(source)
           term = driver.parse(source)
+        end
+
+        def termsetifier
+          @termsetifier ||= PatternTermSetRewriter.new
         end
 
         def simplifier
