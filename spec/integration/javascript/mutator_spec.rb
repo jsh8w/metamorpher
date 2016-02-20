@@ -2,13 +2,13 @@ require "metamorpher"
 require "tempfile"
 
 describe "Mutator" do
-  describe "for JavaScript", focus: true do
+  describe "for JavaScript" do
     class LessThanMutator
       include Metamorpher::Mutator
       include Metamorpher::Builders::JavaScript
 
       def pattern
-        builder.build("A < B")
+        builder.build_pattern("A < B")
       end
 
       def replacement
@@ -19,14 +19,14 @@ describe "Mutator" do
     subject { LessThanMutator.new }
 
     let(:mutatable) do
-      "if(4 < 5) 4; else 5;"
+      "if(foo < bar) 4; else 5;"
     end
 
     let(:mutated) do
       [
-        "if(4 > 5) 4; else 5;",
-        "if(4 == 5) 4; else 5;",
-        "if(4 != 5) 4; else 5;"
+        "if(foo > bar) 4; else 5;",
+        "if(foo == bar) 4; else 5;",
+        "if(foo != bar) 4; else 5;"
       ]
     end
 
@@ -40,9 +40,9 @@ describe "Mutator" do
 
         it "should yield for each mutation site" do
           expect { |b| subject.mutate(mutatable, &b) }.to yield_successive_args(
-            site_for(4..8, "4 < 5", "4 < 5"),
-            site_for(4..8, "4 < 5", "4 == 5"),
-            site_for(4..8, "4 < 5", "4 != 5")
+            site_for(4..12, "foo < bar", "foo > bar"),
+            site_for(4..12, "foo < bar", "foo == bar"),
+            site_for(4..12, "foo < bar", "foo != bar")
           )
         end
       end

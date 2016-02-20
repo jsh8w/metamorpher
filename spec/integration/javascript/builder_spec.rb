@@ -1,6 +1,6 @@
 require "metamorpher"
 
-describe Metamorpher do
+describe Metamorpher, focus: true do
   subject { Metamorpher.builder }
   before { Metamorpher.configure(builder: :javascript) }
 
@@ -17,6 +17,46 @@ describe Metamorpher do
       silence_stream(STDERR) do
         expect { subject.build("1 + ") }.to raise_error(Metamorpher::Drivers::ParseError)
       end
+    end
+  end
+
+  describe "when building patterns" do
+    it "should introduce TermSets into the AST" do
+      actual = subject.build_pattern("A < B")
+
+      a_termset = ast_builder.either!(
+        ast_builder.literal!(RKelly::Nodes::BreakNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ContinueNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::EmptyStatementNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::FalseNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::NullNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::NumberNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ParameterNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::RegexpNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::StringNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ThisNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::TrueNode, ast_builder.A),
+      )
+
+      b_termset = ast_builder.either!(
+        ast_builder.literal!(RKelly::Nodes::BreakNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::ContinueNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::EmptyStatementNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::FalseNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::NullNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::NumberNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::ParameterNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::RegexpNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::StringNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::ThisNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::TrueNode, ast_builder.B),
+      )
+
+      expected = ast_builder.literal!(RKelly::Nodes::LessNode, a_termset, b_termset)
+
+      expect(actual).to eq(expected)
     end
   end
 

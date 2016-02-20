@@ -10,7 +10,12 @@ module Metamorpher
     module JavaScript
       class Builder
         def build(*sources)
-          terms = sources.map { |source| decorate(rewrite(simplify(parse(source)))) }
+          terms = sources.map { |source| decorate(rewrite(simplify(parse(source), false))) }
+          terms.size == 1 ? terms.first : Metamorpher::Terms::TermSet.new(terms: terms)
+        end
+
+        def build_pattern(*sources)
+          terms = sources.map { |source| decorate(rewrite(simplify(parse(source), true))) }
           terms.size == 1 ? terms.first : Metamorpher::Terms::TermSet.new(terms: terms)
         end
 
@@ -26,8 +31,8 @@ module Metamorpher
 
         # Method to remove container nodes of JavaScript Metamorpher AST.
         # e.g Nodes that have a single child node
-        def simplify(parsed)
-          simplifier.simplify(parsed)
+        def simplify(parsed, is_pattern)
+          simplifier.simplify(parsed, is_pattern)
         end
 
         def parse(source)
