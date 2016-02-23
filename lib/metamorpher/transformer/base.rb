@@ -34,7 +34,6 @@ module Metamorpher
       def reduce_to_replacements(src, literal)
         [].tap do |replacements|
           rule.reduce(literal) do |original, rewritings|
-            # NOT GETTING INTO THIS BLOCK
             original_position = driver.source_location_for(original)
             original_code = src[original_position]
 

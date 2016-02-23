@@ -298,7 +298,10 @@ module Metamorpher
       end
 
       def ast_for(literal)
-        literal.path.reduce(@root) { |a, e| a.children[e] }
+        literal.path.reduce(@root) do |a, e|
+          children = get_child_nodes(a)
+          children[e]
+        end
       end
 
       def parser

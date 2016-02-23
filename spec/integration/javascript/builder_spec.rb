@@ -1,6 +1,6 @@
 require "metamorpher"
 
-describe Metamorpher, focus: true do
+describe Metamorpher do
   subject { Metamorpher.builder }
   before { Metamorpher.configure(builder: :javascript) }
 
@@ -36,7 +36,7 @@ describe Metamorpher, focus: true do
         ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.A),
         ast_builder.literal!(RKelly::Nodes::StringNode, ast_builder.A),
         ast_builder.literal!(RKelly::Nodes::ThisNode, ast_builder.A),
-        ast_builder.literal!(RKelly::Nodes::TrueNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::TrueNode, ast_builder.A)
       )
 
       b_termset = ast_builder.either!(
@@ -51,7 +51,7 @@ describe Metamorpher, focus: true do
         ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.B),
         ast_builder.literal!(RKelly::Nodes::StringNode, ast_builder.B),
         ast_builder.literal!(RKelly::Nodes::ThisNode, ast_builder.B),
-        ast_builder.literal!(RKelly::Nodes::TrueNode, ast_builder.B),
+        ast_builder.literal!(RKelly::Nodes::TrueNode, ast_builder.B)
       )
 
       expected = ast_builder.literal!(RKelly::Nodes::LessNode, a_termset, b_termset)

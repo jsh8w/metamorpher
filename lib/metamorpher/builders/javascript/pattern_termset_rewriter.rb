@@ -47,10 +47,9 @@ module Metamorpher
         end
 
         def leaf_node_parents
-          [
-            'Break', 'Continue', 'EmptyStatement', 'False', 'Null', 'Number',
-            'Parameter', 'Regexp', 'Resolve', 'String', 'This', 'True'
-          ]
+          %w(
+            Break Continue EmptyStatement False Null Number
+            Parameter Regexp Resolve String This True)
         end
 
         def decorate(term)

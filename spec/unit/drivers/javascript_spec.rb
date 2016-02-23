@@ -3,7 +3,7 @@ require "metamorpher/builders/ast/builder"
 
 module Metamorpher
   module Drivers
-    describe JavaScript do
+    describe JavaScript, focus: true do
       let(:builder) { Builders::AST::Builder.new }
 
       describe "for a simple program" do
