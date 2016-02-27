@@ -310,35 +310,3 @@ module Metamorpher
     end
   end
 end
-
-# javascript = Metamorpher::Drivers::JavaScript.new
-# ast = javascript.parse('function myFunction(p1, p2, p3, p4) {
-#     return p1 * p2 * p3 * p4;
-# }')
-# ast = javascript.parse('var person={
-#     name: "jack",
-#     email: "jack@ctu.com",
-#     twitter: "jackb_ctu"
-# };
-# var name = person.name')
-# ast = javascript.parse('var x = [1,2,3,4];
-# y = x[1]')
-# ast = javascript.parse('var message, x;
-#     message = "";
-#     x = 11;
-#     try {
-#         if(message == "") throw "is empty";
-#         if(x > 10) throw "is too high";
-#         if(x < 5) throw "is too low";
-#     }
-#     catch(err) {
-#         message = "Error";
-#     }')
-# ast = javascript.parse('for(var i = 0; i < 10; i++) { var x = 5 + 5; }')
-# ast = javascript.parse('if(true) 4; else 5;')
-# ast = javascript.parse('var x = 2+2;
-# var y = 5-1;
-# var z = 4+2;')
-# puts ast
-# code = javascript.unparse(ast)
-# puts code

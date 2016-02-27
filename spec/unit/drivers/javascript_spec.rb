@@ -78,48 +78,6 @@ module Metamorpher
         end
       end
 
-      describe "for a simple program containing a RKelly PostfixNode" do
-        let(:source)  do
-          'i++;'
-        end
-        let(:literal) do
-          builder.literal!(
-            RKelly::Nodes::SourceElementsNode,
-            builder.literal!(RKelly::Nodes::ExpressionStatementNode,
-                             builder.literal!(RKelly::Nodes::PostfixNode, builder.literal!(RKelly::Nodes::ResolveNode, 'i'), builder.literal!('operator', '++')))
-          )
-        end
-
-        it "should parse a simple program to literals" do
-          expect(subject.parse(source)).to eq(literal)
-        end
-
-        it "should unparse valid literals to source" do
-          expect(subject.unparse(literal)).to eq(source)
-        end
-      end
-
-      describe "for a simple program containing a RKelly PrefixNode" do
-        let(:source)  do
-          '++i;'
-        end
-        let(:literal) do
-          builder.literal!(
-            RKelly::Nodes::SourceElementsNode,
-            builder.literal!(RKelly::Nodes::ExpressionStatementNode,
-                             builder.literal!(RKelly::Nodes::PrefixNode, builder.literal!(RKelly::Nodes::ResolveNode, 'i'), builder.literal!('operator', '++')))
-          )
-        end
-
-        it "should parse a simple program to literals" do
-          expect(subject.parse(source)).to eq(literal)
-        end
-
-        it "should unparse valid literals to source" do
-          expect(subject.unparse(literal)).to eq(source)
-        end
-      end
-
       describe "for a simple program containing a RKelly CaseClauseNode" do
         let(:source)  do
           'switch(x) {
@@ -198,6 +156,62 @@ module Metamorpher
             builder.literal!(RKelly::Nodes::ExpressionStatementNode,
                              builder.literal!(RKelly::Nodes::DotAccessorNode,
                                               builder.literal!(RKelly::Nodes::ResolveNode, 'a'), builder.literal!('accessor', 'name')))
+          )
+        end
+
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
+
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
+
+      describe "for a simple program containing a RKelly ForNode" do
+        let(:source)  do
+          "for(i = 0; i < 5; i++) {
+}"
+        end
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::ForNode,
+                             builder.literal!(RKelly::Nodes::OpEqualNode,
+                                              builder.literal!(RKelly::Nodes::ResolveNode, 'i'),
+                                              builder.literal!(RKelly::Nodes::NumberNode, 0)),
+                             builder.literal!(RKelly::Nodes::LessNode,
+                                              builder.literal!(RKelly::Nodes::ResolveNode, 'i'),
+                                              builder.literal!(RKelly::Nodes::NumberNode, 5)),
+                             builder.literal!(RKelly::Nodes::PostfixNode,
+                                              builder.literal!(RKelly::Nodes::ResolveNode, 'i'),
+                                              builder.literal!('operator', '++')),
+                             builder.literal!(RKelly::Nodes::BlockNode,
+                                              builder.literal!(RKelly::Nodes::SourceElementsNode, [])))
+          )
+        end
+
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
+
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
+
+      describe "for a simple program containing a RKelly ForInNode" do
+        let(:source)  do
+          "for(x in personArray) {
+}"
+        end
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::ForInNode,
+                             builder.literal!(RKelly::Nodes::ResolveNode, 'x'),
+                             builder.literal!(RKelly::Nodes::ResolveNode, 'personArray'),
+                             builder.literal!(RKelly::Nodes::BlockNode, builder.literal!(RKelly::Nodes::SourceElementsNode, [])))
           )
         end
 
@@ -347,6 +361,48 @@ module Metamorpher
         end
       end
 
+      describe "for a simple program containing a RKelly PostfixNode" do
+        let(:source)  do
+          'i++;'
+        end
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::ExpressionStatementNode,
+                             builder.literal!(RKelly::Nodes::PostfixNode, builder.literal!(RKelly::Nodes::ResolveNode, 'i'), builder.literal!('operator', '++')))
+          )
+        end
+
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
+
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
+
+      describe "for a simple program containing a RKelly PrefixNode" do
+        let(:source)  do
+          '++i;'
+        end
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::ExpressionStatementNode,
+                             builder.literal!(RKelly::Nodes::PrefixNode, builder.literal!(RKelly::Nodes::ResolveNode, 'i'), builder.literal!('operator', '++')))
+          )
+        end
+
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
+
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
+
       describe "for a simple program containing a RKelly PropertyNode" do
         let(:source)  do
           "person = {
@@ -364,26 +420,77 @@ module Metamorpher
           )
         end
 
-        describe "for a simple program containing a RKelly StrictEqualNode" do
-          let(:source)  do
-            "a === b;"
-          end
-          let(:literal) do
-            builder.literal!(
-              RKelly::Nodes::SourceElementsNode,
-              builder.literal!(RKelly::Nodes::ExpressionStatementNode,
-                               builder.literal!(RKelly::Nodes::StrictEqualNode,
-                                                builder.literal!(RKelly::Nodes::ResolveNode, 'a'), builder.literal!(RKelly::Nodes::ResolveNode, 'b')))
-            )
-          end
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
 
-          it "should parse a simple program to literals" do
-            expect(subject.parse(source)).to eq(literal)
-          end
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
 
-          it "should unparse valid literals to source" do
-            expect(subject.unparse(literal)).to eq(source)
-          end
+      describe "for a simple program containing a RKelly StrictEqualNode" do
+        let(:source)  do
+          "a === b;"
+        end
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::ExpressionStatementNode,
+                             builder.literal!(RKelly::Nodes::StrictEqualNode,
+                                              builder.literal!(RKelly::Nodes::ResolveNode, 'a'), builder.literal!(RKelly::Nodes::ResolveNode, 'b')))
+          )
+        end
+
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
+
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
+
+      describe "for a simple program containing a RKelly TryNode" do
+        let(:source)  do
+          "try {
+
+} catch(err) {
+
+}"
+        end
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::TryNode,
+                             builder.literal!(RKelly::Nodes::BlockNode,
+                                              builder.literal!(RKelly::Nodes::SourceElementsNode, [])),
+                             builder.literal!(RKelly::Nodes::BlockNode,
+                                              builder.literal!(RKelly::Nodes::SourceElementsNode, [])),
+                             builder.literal!('catch_var', 'err'))
+          )
+        end
+
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
+
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
+
+      describe "for a simple program containing a RKelly VarDeclNode" do
+        let(:source) { "var x = 1;" }
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::VarStatementNode,
+                             builder.literal!(RKelly::Nodes::VarDeclNode,
+                                              builder.literal!(RKelly::Nodes::AssignExprNode, builder.literal!(RKelly::Nodes::NumberNode, 1)),
+                                              builder.literal!('name', 'x'),
+                                              builder.literal!('constant', false)))
+          )
         end
 
         it "should parse a simple program to literals" do
