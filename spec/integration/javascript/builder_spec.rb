@@ -60,6 +60,31 @@ describe Metamorpher do
     end
   end
 
+  describe "when building patterns" do
+    it "should not remove LogicalNotNode from the AST" do
+      actual = subject.build_pattern("!A")
+
+      a_termset = ast_builder.either!(
+        ast_builder.literal!(RKelly::Nodes::BreakNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ContinueNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::EmptyStatementNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::FalseNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::NullNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::NumberNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ParameterNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::RegexpNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ResolveNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::StringNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::ThisNode, ast_builder.A),
+        ast_builder.literal!(RKelly::Nodes::TrueNode, ast_builder.A)
+      )
+
+      expected = ast_builder.literal!(RKelly::Nodes::LogicalNotNode, a_termset)
+
+      expect(actual).to eq(expected)
+    end
+  end
+
   describe "when building programs containing constants" do
     it "should convert uppercase constants to variables" do
       expect(subject.build("LEFT + RIGHT")).to eq(
