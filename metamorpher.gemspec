@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "parser", "~> 2.2.2"
   spec.add_runtime_dependency "unparser", "~> 0.2.4"
   spec.add_runtime_dependency "rkelly-remix", "~> 0.0.7"
+  spec.add_runtime_dependency "simplecov", "~> 0.11.1"
 
   spec.add_development_dependency "bundler", "~> 1.11.2"
   spec.add_development_dependency "rake", "~> 10.4.2"

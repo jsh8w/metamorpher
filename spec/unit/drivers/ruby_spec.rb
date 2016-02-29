@@ -3,7 +3,7 @@ require "metamorpher/builders/ast/builder"
 
 module Metamorpher
   module Drivers
-    describe Ruby do
+    describe Ruby, focus: true do
       let(:builder) { Builders::AST::Builder.new }
 
       describe "for a simple program" do

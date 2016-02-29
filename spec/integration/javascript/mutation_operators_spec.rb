@@ -407,12 +407,12 @@ describe "Mutator" do
       subject { JavaScript::UnaryArithmeticOperatorDeletion.new }
 
       let(:mutatable) do
-        "x = -1;"
+        "var x = -1;"
       end
 
       let(:mutated) do
         [
-          "x = 1;"
+          "var x = 1;"
         ]
       end
 
@@ -441,15 +441,15 @@ describe "Mutator" do
         end
       end
 
-      subject { JavaScript::UnaryArithmeticOperatorDeletion.new }
+      subject { JavaScript::UnaryArithmeticOperatorInsertion.new }
 
       let(:mutatable) do
-        "x = 1;"
+        "var x = 1;"
       end
 
       let(:mutated) do
         [
-          "x = -1;"
+          "var x = -1;"
         ]
       end
 
