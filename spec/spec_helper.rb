@@ -1,7 +1,8 @@
-require "codeclimate-test-reporter"
 require "simplecov"
-CodeClimate::TestReporter.start
 SimpleCov.start
+
+require "codeclimate-test-reporter"
+CodeClimate::TestReporter.start
 
 Dir["./spec/support/**/*.rb"].each { |f| require f }
 

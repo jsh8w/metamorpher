@@ -75,9 +75,3 @@ module Metamorpher
     end
   end
 end
-
-ruby = Metamorpher::Drivers::Ruby.new
-ast = ruby.parse('x = 2 + 2')
-# puts ast
-code = ruby.unparse(ast)
-# puts code
