@@ -3,7 +3,7 @@ require "metamorpher/builders/ast/builder"
 
 module Metamorpher
   module Drivers
-    describe JavaScript, focus: true do
+    describe JavaScript do
       let(:builder) { Builders::AST::Builder.new }
 
       describe "for a simple program containing a RKelly Node" do
@@ -171,6 +171,7 @@ module Metamorpher
       describe "for a simple program containing a RKelly ForNode" do
         let(:source)  do
           "for(i = 0; i < 5; i++) {
+
 }"
         end
         let(:literal) do
@@ -203,6 +204,7 @@ module Metamorpher
       describe "for a simple program containing a RKelly ForInNode" do
         let(:source)  do
           "for(x in personArray) {
+
 }"
         end
         let(:literal) do

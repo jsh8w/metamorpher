@@ -2,7 +2,7 @@ require "metamorpher"
 require "tempfile"
 
 describe "Mutator" do
-  describe "for JavaScript", focus: true do
+  describe "for JavaScript" do
     module JavaScript
       class LessThanMutator
         include Metamorpher::Mutator
