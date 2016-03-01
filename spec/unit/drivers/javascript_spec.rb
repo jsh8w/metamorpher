@@ -54,6 +54,7 @@ module Metamorpher
           subject.parse(source)
 
           expect(subject.source_location_for(literal)).to eq(0..5)
+          expect(subject.source_location_for(literal.children.first.children.first.children.first)).to eq(0..0)
         end
       end
 
@@ -258,6 +259,31 @@ module Metamorpher
             RKelly::Nodes::SourceElementsNode,
             builder.literal!(RKelly::Nodes::FunctionDeclNode,
                              builder.literal!(RKelly::Nodes::ParameterNode, 'x'), builder.literal!(RKelly::Nodes::FunctionBodyNode,
+                                                                                                   builder.literal!(RKelly::Nodes::SourceElementsNode, [])),
+                             builder.literal!('name', 'myFunction'))
+          )
+        end
+
+        it "should parse a simple program to literals" do
+          expect(subject.parse(source)).to eq(literal)
+        end
+
+        it "should unparse valid literals to source" do
+          expect(subject.unparse(literal)).to eq(source)
+        end
+      end
+
+      describe "for a simple program containing a RKelly FunctionDeclNode with multiple parameters" do
+        let(:source)  do
+          "function myFunction(x, y) {
+
+}"
+        end
+        let(:literal) do
+          builder.literal!(
+            RKelly::Nodes::SourceElementsNode,
+            builder.literal!(RKelly::Nodes::FunctionDeclNode,
+                             builder.literal!(RKelly::Nodes::ParameterNode, 'x'), builder.literal!(RKelly::Nodes::ParameterNode, 'y'), builder.literal!(RKelly::Nodes::FunctionBodyNode,
                                                                                                    builder.literal!(RKelly::Nodes::SourceElementsNode, [])),
                              builder.literal!('name', 'myFunction'))
           )
