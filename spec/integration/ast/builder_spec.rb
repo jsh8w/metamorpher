@@ -1,7 +1,7 @@
 require "metamorpher"
 require "metamorpher/terms/term_set"
 
-describe Metamorpher, focus: true do
+describe Metamorpher do
   subject { Metamorpher.builder }
 
   before { Metamorpher.configure(builder: :ast)  }
