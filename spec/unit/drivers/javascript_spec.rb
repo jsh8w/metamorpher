@@ -284,7 +284,7 @@ module Metamorpher
             RKelly::Nodes::SourceElementsNode,
             builder.literal!(RKelly::Nodes::FunctionDeclNode,
                              builder.literal!(RKelly::Nodes::ParameterNode, 'x'), builder.literal!(RKelly::Nodes::ParameterNode, 'y'), builder.literal!(RKelly::Nodes::FunctionBodyNode,
-                                                                                                   builder.literal!(RKelly::Nodes::SourceElementsNode, [])),
+                                                                                                                                                        builder.literal!(RKelly::Nodes::SourceElementsNode, [])),
                              builder.literal!('name', 'myFunction'))
           )
         end

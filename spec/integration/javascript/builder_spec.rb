@@ -12,12 +12,6 @@ describe Metamorpher do
         ast_builder.literal!(RKelly::Nodes::AddNode, ast_builder.literal!(RKelly::Nodes::NumberNode, 1), ast_builder.literal!(RKelly::Nodes::NumberNode, 1))
       )
     end
-
-    it "should raise for invalid source" do
-      silence_stream(STDERR) do
-        expect { subject.build("1 + ") }.to raise_error(Metamorpher::Drivers::ParseError)
-      end
-    end
   end
 
   describe "when building patterns" do
@@ -186,12 +180,6 @@ describe Metamorpher do
       expected = ast_builder.either!(expected_literals, expected_variables)
 
       expect(actual).to eq(expected)
-    end
-
-    it "should raise for invalid source" do
-      silence_stream(STDERR) do
-        expect { subject.build("1 + ") }.to raise_error(Metamorpher::Drivers::ParseError)
-      end
     end
   end
 end
