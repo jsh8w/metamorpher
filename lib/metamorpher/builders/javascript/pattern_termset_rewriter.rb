@@ -14,8 +14,10 @@ module Metamorpher
         private
 
         def export_with_termsets(literal)
-          # if literal is a parent of a child node
-          if literal.children.length == 1 && literal.children.first.children.length == 0
+          # if literal is a parent of a child node, and literal is an RKelly node
+          if literal.children.length == 1 &&
+             literal.children.first.children.length == 0 &&
+             literal.name.to_s.include?("RKelly::Nodes::")
             # Build TermSet
             build_termset(literal)
           else
@@ -29,7 +31,7 @@ module Metamorpher
           terms = []
 
           # Loop through each potential parent of leaf node and create term
-          leaf_node_parents.each do |node|
+          rkelly_leaf_node_parents.each do |node|
             # Compute Literal name
             node_name = "RKelly::Nodes::#{node}Node"
 
@@ -46,7 +48,7 @@ module Metamorpher
           Terms::TermSet.new(terms: terms)
         end
 
-        def leaf_node_parents
+        def rkelly_leaf_node_parents
           %w(
             Break Continue EmptyStatement False Null Number
             Parameter Regexp Resolve String This True)

@@ -178,7 +178,7 @@ describe "Mutator" do
 
       let(:mutated) do
         [
-          "var x = i--"
+          "var x = i--;"
         ]
       end
 
