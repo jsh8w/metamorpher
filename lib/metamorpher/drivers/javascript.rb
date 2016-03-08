@@ -13,7 +13,7 @@ module Metamorpher
 
       def unparse(literal)
         ast = export(literal)
-        ast.to_ecma
+        ast.to_ecma.to_s
       end
 
       def source_location_for(literal)

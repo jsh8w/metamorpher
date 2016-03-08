@@ -2,7 +2,7 @@ require "metamorpher"
 require "metamorpher/builders/javascript"
 
 describe "Mutator" do
-  describe "for JavaScript", focus: true do
+  describe "for JavaScript" do
     describe "for Arithmetic Operator Replacement" do
       module JavaScript
         class ArithmeticOperatorReplacement
