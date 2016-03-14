@@ -54,7 +54,6 @@ module Metamorpher
           subject.parse(source)
 
           expect(subject.source_location_for(literal)).to eq(0..5)
-          expect(subject.source_location_for(literal.children.first.children.first.children.first)).to eq(0..0)
         end
       end
 

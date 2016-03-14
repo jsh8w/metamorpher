@@ -1,6 +1,6 @@
 require "metamorpher"
 
-describe Metamorpher do
+describe Metamorpher, focus: true do
   subject { Metamorpher.builder }
   before { Metamorpher.configure(builder: :javascript) }
 
